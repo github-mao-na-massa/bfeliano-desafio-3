@@ -1,0 +1,84 @@
+name: Name
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  
+
+permissions:
+  contents: write
+
+jobs:
+  nome:
+    name: Name
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: validate step
+        id: validacao
+        run: |
+          git fetch
+          git checkout main
+          currentstep=$(cat .github/CONFIG/step.txt)
+          echo "::set-output name=currentstep::$currentstep"
+
+          chmod +x .github/CONFIG/validar.sh
+
+          if .github/CONFIG/validar.sh name: .github/workflows/meu-workflow.yml
+          then
+            echo "::set-output name=validar::0"
+          else
+            echo "::set-output name=validar::1"
+          fi
+
+
+      - name: Create an issue
+        if: ${{ steps.validacao.outputs.currentstep == '1' && steps.validacao.outputs.validar == '0' }} 
+        uses: actions-ecosystem/action-create-issue@v1
+        with:
+          github_token: ${{ secrets.ISSUE_SECRET }}
+          title: Seu Workflow já tem um nome!!!
+          body: |
+            ## UHULLL, começamos bem!!!
+
+            Você acabou de subir um novo workflow, mas ele ainda não está funcional, não é mesmo?
+            Mas não se preocupe, até o fim desses desafios, nós teremos um pipeline rodando com sucesso!
+            ![image](https://user-images.githubusercontent.com/5204009/187568751-7c4eac8a-6e40-4504-b374-e2331e7ef4c2.png)
+
+            Agora que já temos o nome, vamos para a próxima seção, vamos falar um pouco sobre **Triggers**.
+
+            Nós já falamos antes que o GitHub Actions nos permite automatizar uma quantidade enorme de atividades dentro do nosso repositório,
+            e isso se dá ao fato da grande possibilidade de Gatilhos (Triggers) que temos a nossa disposição, permitindo acionar um evento desde um commit,
+            até mesmo atravéz da criação de uma issue. Você pode ver todas as opções possiveis [Aqui, na documentação oficial](https://docs.github.com/pt/actions/using-workflows/events-that-trigger-workflows).
+
+            Para o nosso Workflow de hoje, vamos fazer algo bem simples, tudo bem?
+
+            Vamos  então, incluir uma trigger para um push na branch main, para isso, inclua o código abaixo em seu workflow:
+            ```
+            on:
+             workflow_dispatch:
+             push:
+                branches:
+                  - main  
+            ```
+            Pode salvar, realizar o commit e enviar para o servidor.
+
+            Te vejo na proxima parte!
+             
+            ![mona-the-rivetertocat](https://octodex.github.com/images/scubatocat.png)
+
+      - name: Update Step
+        if: ${{ steps.validacao.outputs.currentstep == '1' }}      
+        run: |
+          git fetch
+          git checkout main
+          echo "2" > .github/CONFIG/step.txt
+          git config --global user.name 'Julio Arruda'
+          git config --global user.email 'julio.arruda@outlook.com'          
+          git add .
+          git commit -m "Atualizando Step"
+          git push

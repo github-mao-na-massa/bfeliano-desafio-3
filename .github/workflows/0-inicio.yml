@@ -1,0 +1,108 @@
+name: Inicio
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  
+
+permissions:
+  contents: write
+
+jobs:
+  start:
+    name: Inicio
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: validate step
+        id: validacao
+        run: |
+          currentstep=$(cat .github/CONFIG/step.txt)
+          echo "::set-output name=currentstep::$currentstep"        
+      
+      - name: Update Step
+        if: ${{ steps.validacao.outputs.currentstep == '0' }}      
+        run: |
+          echo "1" > .github/CONFIG/step.txt
+          git config --global user.name 'Julio Arruda'
+          git config --global user.email 'julio.arruda@outlook.com'          
+          git add .
+          git commit -m "Atualizando Step"
+          git push
+
+      - name: Create an issue
+        if: ${{ steps.validacao.outputs.currentstep == '0' }}      
+        uses: actions-ecosystem/action-create-issue@v1
+        with:
+          github_token: ${{ secrets.ISSUE_SECRET }}
+          title: Boas Vindas ao Primeiro Desafio!!!
+          body: |
+            ## Boas vindas a primeira parte do desafio
+
+            Neste desafio, nós vamos falar um pouco sobre GitHub Actions, e como criar seu primeiro workflow.
+
+            > **_NOTA:_** [Você pode ver a explicação em vídeo](https://www.youtube.com/watch?v=QGcuXYztFSA)
+
+            GitHub Actions, é de uma forma bem direta, uma ferramenta utilizada para automatizar processos nos repositórios
+            do GitHub, incluindo o processo mais conhecido, de CI (Continous Integration / Integração Contínua) e CD (Continous Deployment / Deploy Continuo),
+            e como uma ferramenta de automação, nos permite executar uma série de atividades distintas dentro de nossos repositórios, então, não se limite
+            ao básico, que pode ser automatizar o deployment da sua aplicação, use sua imaginação e melhore o seu dia a dia.
+            
+            :smiley:  Um fato interessante, é que todos esses desafios foram automatizados usando GitHub Actions.
+
+            Os scripts do GitHub Actions também são relativamente simples de se escrever, já que usam o formato **YAML**, então, aqui já vai uma dica, sempre 
+            tome muito cuidado com a identação, e digo isso por experiência própria, porque já fiquei um bom tempo preso em um erro que era apenas uma identação errada.. hehe
+
+            Uma coisa essencial, é que os scripts devem ser armazenados dentro do seguinte diretório:
+
+            ```
+            .github/workflows/
+            ```
+
+            Antes de nós seguirmos para a criação desse script, tem uma questão que acredito ser de grande importância para você, que é o valor de se usar o GitHub Actions.
+
+            E por falar em valores, aqui entra uma questão que eu acho muito legal: 
+
+            ## Projetos Públicos não pagam para usar as Actions
+
+            Então, se você pretende criar algum projeto open source, ou mesmo está estudando, e usando repositórios publicos, pode ficar à vontade, e executar seus workflows sem 
+            maiores problemas, e sem precisar colocar a mão no bolso.. :smiley:
+
+            Nós só vamos precisar pagar mesmo quando vamos trabalhar com repositórios privados, mas ainda sim existe uma camada gratuita que podemos utilizar em cada nivel de licença,
+            conforme você pode ver na imagem aqui embaixo.
+            ![image](https://user-images.githubusercontent.com/5204009/187561203-f1e8b3d2-7917-4141-aae8-9a27bb1ccaff.png)
+
+            E já que você viu na imagem, sim, o GitHub Actions tem suporte a Windows, Linux e MacOs, e não sei se você se atentou a esse detalhe, mas já está disponivel para nosso uso,
+            Runners com esses 3 sistemas operacionais, mas nós vamos falar mais sobre Runners em outro momento. Para esse desafio, usaremos apenas o ``` ubuntu-latest```
+
+            Então, sem mais delongas, vamos começar nossos desafios?
+
+            Para essa primeira parte, vamos começar criando o arquivo do nosso workflow, Ok?
+
+            Então para começarmos, clone o repositório para sua máquina, e acesse a pasta 
+            ```
+            .github/workflows
+            ```            
+            > **_NOTA:_** [Você pode optar por usar o GitHub.dev para editar seus códigos](https://www.youtube.com/shorts/io-aDEtH7xc)
+
+            Nesta pasta, você irá ver uma série de arquivos _.yml_, mas não mexa nesses arquivos, isso irá afetar o funcionamento desse nosso desafio, então, vou te pedir
+            que crie um novo arquivo, com o nome:
+            ```
+            meu-workflow.yml
+            ```
+
+            Dentro desse arquivo, na primeira linha, inclua o seguinte código:
+
+            ```
+            name: Meu Workflow
+            ```
+
+            Pode salvar, realizar o commit e enviar para o servidor.
+
+            Te vejo na proxima parte!
+             
+            ![mona-the-rivetertocat](https://octodex.github.com/images/mona-the-rivetertocat.png)

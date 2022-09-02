@@ -1,0 +1,135 @@
+name: Steps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  
+
+permissions:
+  contents: write
+
+jobs:
+  job-step:
+    name: Steps
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: validate step
+        id: validacao
+        run: |
+          git fetch
+          git checkout main
+          currentstep=$(cat .github/CONFIG/step.txt)
+          echo "::set-output name=currentstep::$currentstep"
+
+          chmod +x .github/CONFIG/validar.sh
+
+          if .github/CONFIG/validar.sh "ubuntu-latest" .github/workflows/meu-workflow.yml
+          then
+            echo "::set-output name=validar::0"
+          else
+            echo "::set-output name=validar::1"
+          fi
+
+
+      - name: Create an issue
+        if: ${{ steps.validacao.outputs.currentstep == '4' && steps.validacao.outputs.validar == '0' }} 
+        uses: actions-ecosystem/action-create-issue@v1
+        with:
+          github_token: ${{ secrets.ISSUE_SECRET }}
+          title: Já temos um Runner
+          body: |
+            ## Estamos na reta final...
+
+            Agora que nós já incluimos até o Runner, vamos para os Steps.
+
+            O bloco de Steps, é onde você vai colocar as instruções propriamente ditas de seu pipeline,
+            e essas instruções podem ser tanto scripts escritos diretamente na linha de comando, quando uma action
+            disponivel no [Marketplace](https://github.com/marketplace?category=&query=&type=actions&verification=).
+
+            As Actions disponibilizadas via marketplace, foram criadas tanto por empresas, quanto pela comunidade, e um 
+            ponto que eu acho muito legal, é que toda action disponivel no marketplace, tem seu código hospedado em um repositório 
+            publico no GitHub, então, você pode acessar o código da Action, e ver exatamente oque ela faz, e até mesmo, 
+            sugerir melhorias via Pull Request.
+
+            Para incluir no pipeline uma action do marketplace, a estrutura é a seguinte:
+            ```
+            - name: Checkout
+              uses: actions/checkout@v2
+            ```
+
+            Esse actions/checkout, é basicamente a organizacao/repositório da action, então, se você acessar a url:
+            ```
+            https://github.com/actions/checkout
+            ``` 
+            Você vai conseguir acessar o repositório.
+            ![image](https://user-images.githubusercontent.com/5204009/187572204-9262ac6f-0d39-462d-89e9-d89cd08ddbb4.png)
+
+            Ah, você também pode criar suas proprias actions e publicar no Marketplace de forma bem simples, mas isso, quem sabe
+            fique para um desafio futuro.
+
+            Se você não encontrar uma action no marketplace que atenda sua necessidade, você pode também rodar uma linha de comando, 
+            e criar e/ou consumir seu script direto, sem uma action propriamente dita.
+
+            A estrutura seria assim:
+            ```
+            - name: Checkout
+              run: echo "Hello World"          
+            ```
+
+            Aqui, vale lembrar que você pode ter diversos steps, quantos forem necessários para executar o processo que você está
+            automatizando.
+
+            Então, agora vamos incluir um Step em nosso workflow?
+
+            Para isso, adicione o seguinte bloco em seu fluxo:
+            ```
+            steps:
+              - name: Checkout
+                uses: actions/checkout@v2            
+            ```
+
+            Vale lembrar, que o bloco _steps_, é alinhado com _runs-on_
+
+            O Seu arquivo final, vai ficar dessa forma:
+            ```
+            name: Steps
+
+            on:
+              push:
+                branches:
+                  - main  
+
+            jobs:
+              job-sample:
+                name: Steps
+                runs-on: ubuntu-latest
+                steps:
+                  - name: Checkout
+                    uses: actions/checkout@v2            
+            ```
+
+            Esse workflow, vai ser executado quando for executado um push na branch main, ou seja, assim que você fizer o push do seu código, 
+            esse woorkflow será executado!!
+
+            Pode salvar, realizar o commit e enviar para o servidor.
+
+            Te vejo na proxima parte!
+             
+            ![mona-the-rivetertocat](https://octodex.github.com/images/inflatocat.png)
+
+      - name: Update Step
+        if: ${{ steps.validacao.outputs.currentstep == '4' }}      
+        run: |
+          git fetch
+          git checkout main
+          echo "5" > .github/CONFIG/step.txt
+          git config --global user.name 'Julio Arruda'
+          git config --global user.email 'julio.arruda@outlook.com'          
+          git add .
+          git commit -m "Atualizando Step"
+          git push

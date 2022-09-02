@@ -1,0 +1,105 @@
+name: Final
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Meu Workflow
+    types:
+      - completed
+
+
+permissions:
+  contents: write
+
+jobs:
+  job-step:
+    name: Final
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: validate step
+        id: validacao
+        run: |
+          git fetch
+          git checkout main
+          currentstep=$(cat .github/CONFIG/step.txt)
+          echo "::set-output name=currentstep::$currentstep"
+
+          chmod +x .github/CONFIG/validar.sh
+
+          if .github/CONFIG/validar.sh "actions/checkout" .github/workflows/meu-workflow.yml
+          then
+            echo "::set-output name=validar::0"
+          else
+            echo "::set-output name=validar::1"
+          fi
+
+
+      - name: Create an issue
+        if: ${{ steps.validacao.outputs.currentstep == '5' && steps.validacao.outputs.validar == '0' }} 
+        uses: actions-ecosystem/action-create-issue@v1
+        with:
+          github_token: ${{ secrets.ISSUE_SECRET }}
+          title: E terminamos!
+          body: |
+            ## Parabéns!!!
+
+            Agora nós temos um workflow funcionando!!!
+
+            Esse workflow, foi realmente bem simples, apenas para te mostrar a base de um workflow, e oque você
+            pode fazer com GitHub Actions.
+
+            Você também pode dar uma olhada nos outros fluxos que já existem aqui, para ver outras coisas que podem
+            ser automatizadas,afinal, como eu disse lá no começo, todo esse processo, também está automatizado via Actions!!!
+
+            No próximo desafio de Actions, vamos deixar as coisas um pouco mais interessantes.
+
+            Te vejo lá!
+
+            Bons Estudos!!!
+
+            ![hula_loop_octodex](https://octodex.github.com/images/jetpacktocat.png)
+
+      - name: Update Step
+        if: ${{ steps.validacao.outputs.currentstep == '5' }}      
+        run: |
+          git fetch
+          git checkout main
+          echo "6" > .github/CONFIG/step.txt
+          git config --global user.name 'Julio Arruda'
+          git config --global user.email 'julio.arruda@outlook.com'          
+          git add .
+          git commit -m "Atualizando Step"
+          git push
+
+      - name: Atualizar Issue Desafio
+        if: ${{ steps.validacao.outputs.currentstep == '5' }} 
+        id: issueinfo 
+        run: |
+          issuenumber="$(cat .github/CONFIG/issue.txt | grep "id" | cut -d":" -f2)"
+          nome="$(cat .github/CONFIG/issue.txt | grep "nome" | cut -d":" -f2)"
+          email="$(cat .github/CONFIG/issue.txt | grep "email" | cut -d":" -f2)"
+          identificado=$(uuidgen)
+
+          echo "::set-output name=issuenumber::$issuenumber"
+          echo "::set-output name=nome::$nome"
+          echo "::set-output name=email::$email"
+          echo "::set-output name=identificado::$identificado"
+
+      - name: Iniciar Processo Badge
+        if: ${{ steps.validacao.outputs.currentstep == '5' }}  
+        uses: dacbd/create-issue-action@v1
+        with:
+          token: ${{ secrets.ISSUE_SECRET }}
+          owner: julioarruda
+          repo: arruda-events-badge
+          title: '[Desafio 1] ${{ steps.issueinfo.outputs.nome }}'
+          body: |
+            participant:${{ steps.issueinfo.outputs.nome }}
+            id:${{ steps.issueinfo.outputs.identificado }}
+            event:desafio_introducao_github_actions            
+            email:${{ steps.issueinfo.outputs.email }}

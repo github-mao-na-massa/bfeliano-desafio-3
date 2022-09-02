@@ -1,0 +1,89 @@
+name: Runners
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  
+
+permissions:
+  contents: write
+
+jobs:
+  job-step:
+    name: Runners
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: validate step
+        id: validacao
+        run: |
+          git fetch
+          git checkout main
+          currentstep=$(cat .github/CONFIG/step.txt)
+          echo "::set-output name=currentstep::$currentstep"
+
+          chmod +x .github/CONFIG/validar.sh
+
+          if .github/CONFIG/validar.sh "job-sample:" .github/workflows/meu-workflow.yml
+          then
+            echo "::set-output name=validar::0"
+          else
+            echo "::set-output name=validar::1"
+          fi
+
+
+      - name: Create an issue
+        if: ${{ steps.validacao.outputs.currentstep == '3' && steps.validacao.outputs.validar == '0' }} 
+        uses: actions-ecosystem/action-create-issue@v1
+        with:
+          github_token: ${{ secrets.ISSUE_SECRET }}
+          title: Nosso Job está pronto
+          body: |
+            ## Vamos lá...
+
+            Agora que incluimos o Job, vamos falar um pouco sobre Runners.
+
+            Como já vimos antes, o GitHub nos fornece alguns runners que podemos usar em nossos pipelines.
+            Esses runners são basicamente containers fornecidos e hospedados pelo GitHub para que possamos realizar nossas automações.
+            Dentro desses runners existem uma série de ferramentas pré instaladas que podemos utilizar, para atender os mais diversos cenários.
+
+            Vale lembrar, que para projetos públicos, nós não temos nenhum custo para usar!!
+
+            Os principais runners disponiveis são:
+
+            - ubuntu-latest
+            - macos-latest
+            - windows-latest
+
+            Existem algumas variações de cada sistema operacional, com versões especificas, mas as principais e mais utilizadas são essas 3 que eu citei.
+
+            Nesse nosso Workflow, nós iremos utilizar o ```ubuntu-latest```
+
+            Então, dentro do seu workflow, adicione o seguinte bloco de código, logo abaixo do name do Job
+            ```
+            runs-on: ubuntu-latest
+            ```
+
+            Detalhe, o _runs-on_ fica alinhado com o _name: Sample_ do job
+
+            Pode salvar, realizar o commit e enviar para o servidor.
+
+            Te vejo na proxima parte!
+             
+            ![mona-the-rivetertocat](https://octodex.github.com/images/inflatocat.png)
+
+      - name: Update Step
+        if: ${{ steps.validacao.outputs.currentstep == '3' }}      
+        run: |
+          git fetch
+          git checkout main
+          echo "4" > .github/CONFIG/step.txt
+          git config --global user.name 'Julio Arruda'
+          git config --global user.email 'julio.arruda@outlook.com'          
+          git add .
+          git commit -m "Atualizando Step"
+          git push
