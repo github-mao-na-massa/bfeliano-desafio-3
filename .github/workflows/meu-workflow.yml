@@ -10,3 +10,4 @@ on:
 jobs:
   job-sample:
     name: Sample
+    runs-on: ubuntu-latest
